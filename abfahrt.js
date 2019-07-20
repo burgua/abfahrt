@@ -4,7 +4,7 @@ const cheerio = require('cheerio');
 const normalize = text => {
     try {
         if (text === 'Sofort') {
-            return 'sofort';
+            return 'jetzt sofort';
         }
 
         const minutes = parseInt(text.replace(' Min', ''));
@@ -36,7 +36,7 @@ const execute = async () => {
         }
 
         let result = resultData.join(', ');
-        const lastComma = result.lastIndexOf(',');,
+        const lastComma = result.lastIndexOf(',');
         if (lastComma !== -1) {
             result = result.substring(0, lastComma) + ' und' + result.substring(lastComma + 1);
         }
