@@ -1,6 +1,8 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+const maxAnswers = 3;
+
 const normalize = text => {
     try {
         if (text === 'Sofort') {
@@ -35,7 +37,13 @@ const execute = async () => {
             }
         }
 
-        let result = resultData.join(', ');
+        const reducedResultData = resultData.slice(0, maxAnswers);
+
+        if (reducedResultData.length === 0) {
+            return `Ich habe keine Ahnung, sorry`;
+        }
+
+        let result = reducedResultData.join(', ');
         const lastComma = result.lastIndexOf(',');
         if (lastComma !== -1) {
             result = result.substring(0, lastComma) + ' und' + result.substring(lastComma + 1);
