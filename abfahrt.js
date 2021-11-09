@@ -1,41 +1,40 @@
 const axios = require('axios');
-const cheerio = require('cheerio');
 
 const maxAnswers = 3;
 
-const normalize = text => {
-    try {
-        if (text === 'Sofort') {
-            return 'jetzt sofort';
-        }
-
-        const minutes = parseInt(text.replace(' Min', ''));
-        if (minutes === 1) {
-            return 'in eine Minute';
-        }
-        return `in ${minutes} Minuten`;
-    } catch (Error) {
-        return text;
+const format = minutes => {
+    if (minutes <= 0) {
+        return 'jetzt sofort';
     }
+
+    if (minutes === 1) {
+        return 'in eine Minute';
+    }
+    return `in ${minutes} Minuten`;
+};
+
+const getData = async () => {
+    const result = [];
+
+    const response = await axios.get(
+        'https://www.vrs.de/index.php?eID=tx_vrsinfo_ass2_departuremonitor&i=7dcc0577bf52481b24a0b095a78b10e5'
+    );
+
+    const line16 = response.data.events.filter(e => e.line.number === '16');
+    const now = Math.floor(new Date().getTime() / 1000);
+
+    for (const entry of line16) {
+        const timestamp = parseInt(entry.departure.timestamp);
+        const minutes = Math.floor((timestamp - now) / 60)
+        result.push(format(minutes));
+    }
+
+    return result;
 };
 
 const execute = async () => {
     try {
-        const response = await axios.get('https://www.kvb.koeln/qr/343/');
-        const $ = cheerio.load(response.data);
-
-        const data = [];
-        $('#qr_ergebnis td.qr_td').each((i, elem) => {
-            data.push($(elem).text());
-        });
-
-        const resultData = [];
-
-        for (let i = 0; i < data.length; i = i + 3) {
-            if (data[i] === '16') {
-                resultData.push(normalize(data[i + 2]));
-            }
-        }
+        const resultData = await getData();
 
         const reducedResultData = resultData.slice(0, maxAnswers);
 
